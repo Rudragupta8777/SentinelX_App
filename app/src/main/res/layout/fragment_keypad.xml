@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="#121212"
     android:padding="24dp"
-    tools:context=".ui.DialerActivity">
+    tools:context=".ui.fragments.KeypadFragment">
 
     <TextView
         android:id="@+id/tvHeader"
