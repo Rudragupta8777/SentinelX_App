@@ -17,13 +17,13 @@ The Sentinel-X Vault is an immutable registry deployed on the Sepolia Testnet. I
 * **Repo:** [Web3 Repo](https://github.com/pratham-developer/SentinelX-Vault)
 
 ### 4. Sentinel-X App
-Contains the core AI service API built with FastAPI for high-performance inference and data handling.
-* **Repo:** [AI FastApiService Repo](https://github.com/ruchit2005/Sentinel-X-Ai-Fastapi-microservice.git)
-
-### 5. Sentinel-X AI FastApiService
 The user-facing mobile application for interacting with the SentinelX ecosystem.
 * **Repo:** [AI FastApiService Repo](https://github.com/Rudragupta8777/SentinelX_App)
 
-### 5. Sentinel-X Figma
+### 5. Sentinel-X AI FastApiService
+Contains the core AI service API built with FastAPI for high-performance inference and data handling.
+* **Repo:** [AI FastApiService Repo](https://github.com/ruchit2005/Sentinel-X-Ai-Fastapi-microservice.git)
+
+### 6. Sentinel-X Figma
 The complete UI/UX design system, prototypes and high-fidelity mockups for the SentinelX platform.
 * **Repo:** [Figma File](https://www.figma.com/design/LalpleVmDJTzsf8umPdRub/Sentinel-X?node-id=0-1&t=VjcIXFsQX34YJQf3-1)
