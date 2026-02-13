@@ -17,9 +17,23 @@
         android:textColor="#FFFFFF"
         android:textSize="34sp"
         android:textStyle="bold"
+        android:gravity="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvPhoneNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Mobile +91 98765 43210"
+        android:textColor="#B0BEC5"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvCallName" />
 
     <TextView
         android:id="@+id/tvCallStatus"
@@ -27,11 +41,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Calling..."
-        android:textColor="#B0BEC5"
-        android:textSize="18sp"
+        android:textColor="#4CAF50"
+        android:textSize="14sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvCallName" />
+        app:layout_constraintTop_toBottomOf="@id/tvPhoneNumber" />
 
     <Chronometer
         android:id="@+id/chronometer"
@@ -49,7 +65,7 @@
         android:id="@+id/ivAvatar"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="40dp"
         android:src="@android:drawable/sym_def_app_icon"
         app:tint="#4CAF50"
         app:layout_constraintEnd_toEndOf="parent"
@@ -68,27 +84,27 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout style="@style/CallOptionButton">
-            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_lock_silent_mode_off" android:id="@+id/btnMute"/>
+            <ImageView style="@style/CallOptionIcon" android:src="@drawable/ic_mute" android:id="@+id/btnMute"/>
             <TextView style="@style/CallOptionText" android:text="Mute"/>
         </LinearLayout>
 
         <LinearLayout style="@style/CallOptionButton">
-            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_dialog_dialer" android:id="@+id/btnKeypad"/>
+            <ImageView style="@style/CallOptionIcon" android:src="@drawable/ic_keypad" android:id="@+id/btnKeypad"/>
             <TextView style="@style/CallOptionText" android:text="Keypad"/>
         </LinearLayout>
 
         <LinearLayout style="@style/CallOptionButton">
-            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_lock_idle_alarm" android:id="@+id/btnSpeaker"/>
+            <ImageView style="@style/CallOptionIcon" android:src="@drawable/ic_speaker" android:id="@+id/btnSpeaker"/>
             <TextView style="@style/CallOptionText" android:text="Speaker"/>
         </LinearLayout>
 
         <LinearLayout style="@style/CallOptionButton">
-            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_btn_speak_now" android:id="@+id/btnRecord"/>
+            <ImageView style="@style/CallOptionIcon" android:src="@drawable/ic_record" android:id="@+id/btnRecord"/>
             <TextView style="@style/CallOptionText" android:text="Record"/>
         </LinearLayout>
 
         <LinearLayout style="@style/CallOptionButton">
-            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_media_pause" android:id="@+id/btnHold"/>
+            <ImageView style="@style/CallOptionIcon" android:src="@drawable/ic_hold" android:id="@+id/btnHold"/>
             <TextView style="@style/CallOptionText" android:text="Hold"/>
         </LinearLayout>
 

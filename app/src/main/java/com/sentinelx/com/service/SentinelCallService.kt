@@ -120,6 +120,29 @@ class SentinelCallService : InCallService() {
         }
     }
 
+    // Add these functions inside SentinelCallService class
+
+    // 1. KEYPAD SUPPORT (Send DTMF Tones)
+    fun playDtmfTone(digit: Char) {
+        currentCall?.playDtmfTone(digit)
+        // Stop the tone after a short burst (standard behavior)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            currentCall?.stopDtmfTone()
+        }, 200)
+    }
+
+    // 2. MUTE SUPPORT
+    fun toggleMute(isMuted: Boolean) {
+        setMuted(isMuted)
+    }
+
+    // 3. SPEAKER SUPPORT
+    fun toggleSpeaker(isSpeaker: Boolean) {
+        val route = if (isSpeaker) android.telecom.CallAudioState.ROUTE_SPEAKER
+        else android.telecom.CallAudioState.ROUTE_EARPIECE
+        setAudioRoute(route)
+    }
+
     private fun checkForMergeOpportunity() {
         if (calls.size >= 2) {
             val call1 = calls[0]

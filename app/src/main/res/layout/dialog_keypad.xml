@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:paddingBottom="24dp"
+    android:minHeight="350dp">
+
+    <View
+        android:id="@+id/drag_handle"
+        android:layout_width="50dp"
+        android:layout_height="6dp"
+        android:layout_marginTop="12dp"
+        android:background="#555555"
+        android:backgroundTint="#555555"
+        android:alpha="0.5"
+        android:backgroundTintMode="src_in"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvKeypadInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:hint="Enter tones..."
+        android:textColorHint="#666666"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.1"
+        android:maxLines="1"
+        android:ellipsize="start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle"
+        app:layout_constraintWidth_percent="0.85"/>
+
+    <GridLayout
+        android:id="@+id/keypadGrid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:columnCount="3"
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvKeypadInput"
+        app:layout_constraintWidth_percent="0.85" >
+
+        <Button style="@style/KeypadBottomSheetButton" android:text="1"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="2"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="3"/>
+
+        <Button style="@style/KeypadBottomSheetButton" android:text="4"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="5"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="6"/>
+
+        <Button style="@style/KeypadBottomSheetButton" android:text="7"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="8"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="9"/>
+
+        <Button style="@style/KeypadBottomSheetButton" android:text="*"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="0"/>
+        <Button style="@style/KeypadBottomSheetButton" android:text="#"/>
+
+    </GridLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
