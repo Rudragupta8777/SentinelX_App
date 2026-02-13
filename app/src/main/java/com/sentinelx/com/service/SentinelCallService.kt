@@ -30,14 +30,10 @@ class SentinelCallService : InCallService() {
         instance = this
         currentCall = call
 
-        // 1. REGISTER CALLBACK (This is where we fix the transition)
         call.registerCallback(object : Call.Callback() {
             override fun onStateChanged(call: Call, state: Int) {
-                // Notify UI listener (if any)
                 callStatusCallback?.invoke(state)
 
-                // FIX: TRANSITION LOGIC
-                // If the call was ringing and is now ACTIVE (Answered), switch screens!
                 if (state == Call.STATE_ACTIVE) {
                     launchCallScreen(call)
                     checkForMergeOpportunity()
@@ -120,12 +116,8 @@ class SentinelCallService : InCallService() {
         }
     }
 
-    // Add these functions inside SentinelCallService class
-
-    // 1. KEYPAD SUPPORT (Send DTMF Tones)
     fun playDtmfTone(digit: Char) {
         currentCall?.playDtmfTone(digit)
-        // Stop the tone after a short burst (standard behavior)
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             currentCall?.stopDtmfTone()
         }, 200)
@@ -136,7 +128,6 @@ class SentinelCallService : InCallService() {
         setMuted(isMuted)
     }
 
-    // 3. SPEAKER SUPPORT
     fun toggleSpeaker(isSpeaker: Boolean) {
         val route = if (isSpeaker) android.telecom.CallAudioState.ROUTE_SPEAKER
         else android.telecom.CallAudioState.ROUTE_EARPIECE

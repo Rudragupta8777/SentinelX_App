@@ -3,43 +3,59 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#121212"
-    android:padding="24dp"
-    tools:context=".ui.fragments.KeypadFragment">
+    android:padding="15dp">
 
-    <TextView
-        android:id="@+id/tvHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SECURE DIALER"
-        android:textColor="#4CAF50"
-        android:letterSpacing="0.15"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvContactSearch"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="16dp"/>
-
-    <TextView
-        android:id="@+id/tvNumberDisplay"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Enter Number..."
-        android:textColorHint="#555555"
-        android:textColor="#FFFFFF"
-        android:textSize="32sp"
-        android:gravity="center"
-        android:maxLines="1"
-        android:ellipsize="start"
-        app:layout_constraintTop_toBottomOf="@id/tvHeader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/numberContainer"/>
+
+    <LinearLayout
+        android:id="@+id/numberContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingBottom="14dp"
         app:layout_constraintBottom_toTopOf="@id/gridKeypad"
-        android:layout_marginBottom="24dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvNumberDisplay"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Dial..."
+            android:layout_marginStart="48dp"
+            android:textColorHint="#555555"
+            android:textColor="#FFFFFF"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="start"
+            android:fontFamily="sans-serif-light"/>
+
+        <ImageButton
+            android:id="@+id/btnBackspace"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_input_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="#757575"
+            android:contentDescription="Backspace"
+            android:scaleType="centerInside" />
+    </LinearLayout>
 
     <GridLayout
         android:id="@+id/gridKeypad"
@@ -48,39 +64,43 @@
         android:columnCount="3"
         android:rowCount="4"
         android:alignmentMode="alignMargins"
-        app:layout_constraintTop_toBottomOf="@id/tvNumberDisplay"
+        android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toTopOf="@id/btnCall"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button style="@style/DialerKey" android:text="1" />
-        <Button style="@style/DialerKey" android:text="2" />
-        <Button style="@style/DialerKey" android:text="3" />
+        <Button style="@style/CoolDialerKey" android:text="1" />
+        <Button style="@style/CoolDialerKey" android:text="2" />
+        <Button style="@style/CoolDialerKey" android:text="3" />
 
-        <Button style="@style/DialerKey" android:text="4" />
-        <Button style="@style/DialerKey" android:text="5" />
-        <Button style="@style/DialerKey" android:text="6" />
+        <Button style="@style/CoolDialerKey" android:text="4" />
+        <Button style="@style/CoolDialerKey" android:text="5" />
+        <Button style="@style/CoolDialerKey" android:text="6" />
 
-        <Button style="@style/DialerKey" android:text="7" />
-        <Button style="@style/DialerKey" android:text="8" />
-        <Button style="@style/DialerKey" android:text="9" />
+        <Button style="@style/CoolDialerKey" android:text="7" />
+        <Button style="@style/CoolDialerKey" android:text="8" />
+        <Button style="@style/CoolDialerKey" android:text="9" />
 
-        <Button style="@style/DialerKey" android:text="*" />
-        <Button style="@style/DialerKey" android:text="0" />
-        <Button style="@style/DialerKey" android:text="#" />
+        <Button style="@style/CoolDialerKey" android:text="*" />
+        <Button style="@style/CoolDialerKey" android:text="0" />
+        <Button style="@style/CoolDialerKey" android:text="#" />
     </GridLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/btnCall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_call"
+        android:text="CALL"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:gravity="center"
+        app:icon="@drawable/ic_call_go"
+        app:iconTint="#000000"
         app:backgroundTint="#4CAF50"
-        app:tint="#000000"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="32dp"
-        android:contentDescription="Call" />
+        android:layout_marginBottom="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
