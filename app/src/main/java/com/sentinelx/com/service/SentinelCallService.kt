@@ -4,91 +4,132 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.telecom.Call
 import android.telecom.InCallService
 import android.telecom.TelecomManager
 import android.telecom.VideoProfile
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.sentinelx.com.ui.CallActivity
 import com.sentinelx.com.ui.IncomingCallActivity
 
 class SentinelCallService : InCallService() {
 
-    // Singleton to share the Call object with the UI
     companion object {
         var currentCall: Call? = null
         var instance: SentinelCallService? = null
+        var callStatusCallback: ((Int) -> Unit)? = null
     }
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         instance = this
+        currentCall = call
 
-        // 1. Detect Incoming Call
-        if (call.details.callDirection == Call.Details.DIRECTION_INCOMING) {
-            currentCall = call
+        // 1. REGISTER CALLBACK (This is where we fix the transition)
+        call.registerCallback(object : Call.Callback() {
+            override fun onStateChanged(call: Call, state: Int) {
+                // Notify UI listener (if any)
+                callStatusCallback?.invoke(state)
 
-            // 2. Launch your Red Overlay UI
+                // FIX: TRANSITION LOGIC
+                // If the call was ringing and is now ACTIVE (Answered), switch screens!
+                if (state == Call.STATE_ACTIVE) {
+                    launchCallScreen(call)
+                    checkForMergeOpportunity()
+                }
+
+                // Cleanup on disconnect
+                if (state == Call.STATE_DISCONNECTED) {
+                    if (currentCall == call) currentCall = null
+                }
+            }
+        })
+
+        // 2. INITIAL SCREEN DECISION
+        val number = getNumber(call)
+
+        if (call.state == Call.STATE_RINGING) {
+            // INCOMING -> Show Red/Black Incoming Screen
+            val isSavedContact = isContactSaved(this, number)
+
             val intent = Intent(this, IncomingCallActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-            // Pass the phone number to the UI
-            val handle = call.details.handle
-            val number = handle?.schemeSpecificPart ?: "Unknown"
             intent.putExtra("PHONE_NUMBER", number)
-
+            intent.putExtra("IS_CONTACT", isSavedContact)
             startActivity(intent)
+
+        } else if (call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING) {
+            // OUTGOING -> Show Ongoing Call Screen immediately
+            launchCallScreen(call)
         }
     }
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
-        if (currentCall == call) {
-            currentCall = null
-        }
+        if (currentCall == call) currentCall = null
+        callStatusCallback?.invoke(Call.STATE_DISCONNECTED)
     }
 
-    /**
-     * THE TRAP LOGIC:
-     * 1. Answer Scammer
-     * 2. Dial Vomyra Bot
-     * 3. Merge them
-     */
+    // --- HELPER: LAUNCH THE CALL ACTIVITY ---
+    private fun launchCallScreen(call: Call) {
+        val intent = Intent(this, CallActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.putExtra("PHONE_NUMBER", getNumber(call))
+        startActivity(intent)
+    }
+
+    private fun getNumber(call: Call): String {
+        return call.details.handle?.schemeSpecificPart ?: "Unknown"
+    }
+
+    // --- HELPER: CHECK IF CONTACT IS SAVED ---
+    private fun isContactSaved(context: Context, number: String): Boolean {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            return false
+        }
+        val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
+        var isContact = false
+        val cursor: Cursor? = context.contentResolver.query(uri, projection, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) isContact = true
+        }
+        return isContact
+    }
+
+    // --- TRAP & MERGE LOGIC ---
     fun activateTrapAndBridge(scammerCall: Call, botNumber: String) {
-        // Step 1: Answer the Scammer (if not already answered)
+        // 1. Answer the Scammer
         if (scammerCall.state == Call.STATE_RINGING) {
             scammerCall.answer(VideoProfile.STATE_AUDIO_ONLY)
         }
 
-        // Step 2: Get TelecomManager to place the new call
+        // 2. Dial the Bot (This creates a NEW call, triggering onCallAdded again)
         val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
         val uri = Uri.fromParts("tel", botNumber, null)
         val extras = Bundle()
         extras.putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, false)
 
-        // Check PERMISSION before placing call (Required by Android)
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-
-            // Place the outgoing call to the Bot
-            // Note: InCallService cannot return the new Call object directly from placeCall.
-            // We have to wait for onCallAdded to fire again for the NEW outgoing call.
             telecomManager.placeCall(uri, extras)
-
-            // We set a flag or listener to know the next call added is our Bot Call
-            // For this hackathon, we will handle the merge in 'onCallAdded' or by tracking calls.
-            bridgeWhenReady(scammerCall)
         }
     }
 
-    private fun bridgeWhenReady(scammerCall: Call) {
-        // Since placeCall is async, we can't get the 'botCall' object immediately here.
-        // In a real app, we would track this in onCallAdded.
-        // However, for the 'Call.Callback' approach you wanted:
+    private fun checkForMergeOpportunity() {
+        if (calls.size >= 2) {
+            val call1 = calls[0]
+            val call2 = calls[1]
+            if ((call1.state == Call.STATE_ACTIVE || call1.state == Call.STATE_HOLDING) &&
+                (call2.state == Call.STATE_ACTIVE || call2.state == Call.STATE_HOLDING)) {
 
-        // We will attach a listener to the SCAMMER call to wait for the conference opportunity
-        // or simply wait for the user to see the UI update.
+                call1.conference(call2)
+                call2.conference(call1)
+            }
+        }
     }
-
-
 }

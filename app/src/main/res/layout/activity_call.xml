@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:keepScreenOn="true">
+
+    <TextView
+        android:id="@+id/tvCallName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:text="Unknown Caller"
+        android:textColor="#FFFFFF"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvCallStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Calling..."
+        android:textColor="#B0BEC5"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvCallName" />
+
+    <Chronometer
+        android:id="@+id/chronometer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvCallStatus" />
+
+    <ImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="60dp"
+        android:src="@android:drawable/sym_def_app_icon"
+        app:tint="#4CAF50"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chronometer" />
+
+    <GridLayout
+        android:id="@+id/gridActions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:columnCount="3"
+        android:rowCount="2"
+        app:layout_constraintBottom_toTopOf="@id/btnEndCall"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_lock_silent_mode_off" android:id="@+id/btnMute"/>
+            <TextView style="@style/CallOptionText" android:text="Mute"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_dialog_dialer" android:id="@+id/btnKeypad"/>
+            <TextView style="@style/CallOptionText" android:text="Keypad"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_lock_idle_alarm" android:id="@+id/btnSpeaker"/>
+            <TextView style="@style/CallOptionText" android:text="Speaker"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_btn_speak_now" android:id="@+id/btnRecord"/>
+            <TextView style="@style/CallOptionText" android:text="Record"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_media_pause" android:id="@+id/btnHold"/>
+            <TextView style="@style/CallOptionText" android:text="Hold"/>
+        </LinearLayout>
+
+        <LinearLayout style="@style/CallOptionButton">
+            <ImageView style="@style/CallOptionIcon" android:src="@android:drawable/ic_input_add" android:id="@+id/btnAddCall"/>
+            <TextView style="@style/CallOptionText" android:text="Add Call"/>
+        </LinearLayout>
+    </GridLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnEndCall"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_marginBottom="60dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginEnd="80dp"
+        app:icon="@drawable/ic_call"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        app:iconSize="50dp"
+        app:iconTint="#FFFFFF"
+        app:backgroundTint="#F44336"
+        app:cornerRadius="36dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
