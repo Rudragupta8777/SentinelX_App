@@ -26,4 +26,4 @@ Contains the core AI service API built with FastAPI for high-performance inferen
 
 ### 6. Sentinel-X Figma
 The complete UI/UX design system, prototypes and high-fidelity mockups for the SentinelX platform.
-* **Repo:** [Figma File](https://www.figma.com/design/LalpleVmDJTzsf8umPdRub/Sentinel-X?node-id=0-1&t=VjcIXFsQX34YJQf3-1)
+* **File Link:** [Figma File](https://www.figma.com/design/LalpleVmDJTzsf8umPdRub/Sentinel-X?node-id=0-1&t=VjcIXFsQX34YJQf3-1)
