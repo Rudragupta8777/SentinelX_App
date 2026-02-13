@@ -21,6 +21,7 @@ class RecentsAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var displayList = ArrayList<RecentsItem>()
+    private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
 
     // View Types
     private val TYPE_HEADER = 0
@@ -30,7 +31,6 @@ class RecentsAdapter(
         groupData(allCalls)
     }
 
-    // --- VIEW HOLDERS ---
     class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvHeader)
     }
@@ -42,7 +42,6 @@ class RecentsAdapter(
         val ivType: ImageView = view.findViewById(R.id.ivCallType)
     }
 
-    // --- ADAPTER OVERRIDES ---
     override fun getItemViewType(position: Int): Int {
         return if (displayList[position] is RecentsItem.Header) TYPE_HEADER else TYPE_ITEM
     }
@@ -65,45 +64,37 @@ class RecentsAdapter(
         } else if (holder is CallViewHolder && item is RecentsItem.Log) {
             val call = item.data
 
-            // 1. Name & Number
             holder.tvName.text = if (call.name.isNotEmpty()) call.name else call.number
-
-            // 2. Format Time
-            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
             holder.tvTime.text = timeFormat.format(Date(call.date))
 
-            // 3. Icons & Colors based on Type
             when (call.type) {
                 CallLog.Calls.INCOMING_TYPE -> {
                     holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
-                    holder.ivType.setColorFilter(Color.parseColor("#4CAF50")) // Green
+                    holder.ivType.setColorFilter(Color.parseColor("#4CAF50"))
                     holder.tvInfo.text = "Incoming"
                 }
                 CallLog.Calls.OUTGOING_TYPE -> {
                     holder.ivType.setImageResource(android.R.drawable.sym_call_outgoing)
-                    holder.ivType.setColorFilter(Color.parseColor("#2196F3")) // Blue
+                    holder.ivType.setColorFilter(Color.parseColor("#2196F3"))
                     holder.tvInfo.text = "Outgoing"
                 }
                 CallLog.Calls.MISSED_TYPE -> {
                     holder.ivType.setImageResource(android.R.drawable.sym_call_missed)
-                    holder.ivType.setColorFilter(Color.parseColor("#F44336")) // Red
+                    holder.ivType.setColorFilter(Color.parseColor("#F44336"))
                     holder.tvInfo.text = "Missed"
-                    holder.tvName.setTextColor(Color.parseColor("#F44336")) // Red Name
+                    holder.tvName.setTextColor(Color.parseColor("#F44336"))
                 }
                 else -> {
                     holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
                     holder.tvInfo.text = "Unknown"
                 }
             }
-
-            // Click to Call
             holder.itemView.setOnClickListener { onItemClick(call.number) }
         }
     }
 
     override fun getItemCount() = displayList.size
 
-    // --- LOGIC: GROUP BY DATE & FILTER ---
     fun filter(query: String) {
         if (query.isEmpty()) {
             groupData(allCalls)
@@ -118,12 +109,11 @@ class RecentsAdapter(
 
     fun updateData(newData: List<CallLogItem>) {
         allCalls = newData
-        filter("") // Reset
+        filter("")
     }
 
     private fun groupData(list: List<CallLogItem>) {
         displayList.clear()
-
         val today = ArrayList<CallLogItem>()
         val yesterday = ArrayList<CallLogItem>()
         val older = ArrayList<CallLogItem>()
@@ -140,7 +130,6 @@ class RecentsAdapter(
             }
         }
 
-        // Build Flattened List
         if (today.isNotEmpty()) {
             displayList.add(RecentsItem.Header("Today"))
             today.forEach { displayList.add(RecentsItem.Log(it)) }

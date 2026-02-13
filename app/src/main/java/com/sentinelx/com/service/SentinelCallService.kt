@@ -30,37 +30,31 @@ class SentinelCallService : InCallService() {
         instance = this
         currentCall = call
 
+        // 1. Register Callback IMMEDIATELY
         call.registerCallback(object : Call.Callback() {
             override fun onStateChanged(call: Call, state: Int) {
                 callStatusCallback?.invoke(state)
 
-                if (state == Call.STATE_ACTIVE) {
-                    launchCallScreen(call)
-                    checkForMergeOpportunity()
-                }
-
-                // Cleanup on disconnect
-                if (state == Call.STATE_DISCONNECTED) {
-                    if (currentCall == call) currentCall = null
+                when (state) {
+                    Call.STATE_ACTIVE -> {
+                        launchCallScreen(call)
+                        checkForMergeOpportunity()
+                    }
+                    Call.STATE_RINGING -> {
+                        // FIX: Launch Incoming Screen if state updates to RINGING later
+                        launchIncomingScreen(call)
+                    }
+                    Call.STATE_DISCONNECTED -> {
+                        if (currentCall == call) currentCall = null
+                    }
                 }
             }
         })
 
-        // 2. INITIAL SCREEN DECISION
-        val number = getNumber(call)
-
+        // 2. Initial State Check
         if (call.state == Call.STATE_RINGING) {
-            // INCOMING -> Show Red/Black Incoming Screen
-            val isSavedContact = isContactSaved(this, number)
-
-            val intent = Intent(this, IncomingCallActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.putExtra("PHONE_NUMBER", number)
-            intent.putExtra("IS_CONTACT", isSavedContact)
-            startActivity(intent)
-
+            launchIncomingScreen(call)
         } else if (call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING) {
-            // OUTGOING -> Show Ongoing Call Screen immediately
             launchCallScreen(call)
         }
     }
@@ -71,10 +65,23 @@ class SentinelCallService : InCallService() {
         callStatusCallback?.invoke(Call.STATE_DISCONNECTED)
     }
 
-    // --- HELPER: LAUNCH THE CALL ACTIVITY ---
+    // --- HELPER: LAUNCH INCOMING SCREEN ---
+    private fun launchIncomingScreen(call: Call) {
+        val number = getNumber(call)
+        val isSavedContact = isContactSaved(this, number)
+
+        val intent = Intent(this, IncomingCallActivity::class.java)
+        // CRITICAL FLAGS for reliability
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        intent.putExtra("PHONE_NUMBER", number)
+        intent.putExtra("IS_CONTACT", isSavedContact)
+        startActivity(intent)
+    }
+
+    // --- HELPER: LAUNCH ONGOING CALL SCREEN ---
     private fun launchCallScreen(call: Call) {
         val intent = Intent(this, CallActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         intent.putExtra("PHONE_NUMBER", getNumber(call))
         startActivity(intent)
     }
@@ -83,7 +90,6 @@ class SentinelCallService : InCallService() {
         return call.details.handle?.schemeSpecificPart ?: "Unknown"
     }
 
-    // --- HELPER: CHECK IF CONTACT IS SAVED ---
     private fun isContactSaved(context: Context, number: String): Boolean {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             return false
@@ -98,14 +104,10 @@ class SentinelCallService : InCallService() {
         return isContact
     }
 
-    // --- TRAP & MERGE LOGIC ---
     fun activateTrapAndBridge(scammerCall: Call, botNumber: String) {
-        // 1. Answer the Scammer
         if (scammerCall.state == Call.STATE_RINGING) {
             scammerCall.answer(VideoProfile.STATE_AUDIO_ONLY)
         }
-
-        // 2. Dial the Bot (This creates a NEW call, triggering onCallAdded again)
         val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
         val uri = Uri.fromParts("tel", botNumber, null)
         val extras = Bundle()
@@ -123,7 +125,6 @@ class SentinelCallService : InCallService() {
         }, 200)
     }
 
-    // 2. MUTE SUPPORT
     fun toggleMute(isMuted: Boolean) {
         setMuted(isMuted)
     }
@@ -135,14 +136,13 @@ class SentinelCallService : InCallService() {
     }
 
     private fun checkForMergeOpportunity() {
+        // Simple merge logic if 2 calls exist
         if (calls.size >= 2) {
             val call1 = calls[0]
             val call2 = calls[1]
             if ((call1.state == Call.STATE_ACTIVE || call1.state == Call.STATE_HOLDING) &&
                 (call2.state == Call.STATE_ACTIVE || call2.state == Call.STATE_HOLDING)) {
-
                 call1.conference(call2)
-                call2.conference(call1)
             }
         }
     }

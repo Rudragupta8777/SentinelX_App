@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var setupLayout: View
     private lateinit var mainContentGroup: Group
 
-    // List of all required permissions
     private val requiredPermissions = arrayOf(
         Manifest.permission.CALL_PHONE,
         Manifest.permission.READ_PHONE_STATE,
