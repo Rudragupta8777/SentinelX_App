@@ -5,4 +5,8 @@
     <color name="sentinel_green">#4CAF50</color>
     <color name="sentinel_red">#D32F2F</color>
     <color name="background_dark">#121212</color>
+
+    <color name="retro_bg">#FDFDF5</color>
+    <color name="retro_black">#080808</color>
+    <color name="retro_white">#FFFFFF</color>
 </resources>

@@ -9,9 +9,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.view.View
-import android.widget.Button
 import android.widget.GridLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -31,20 +31,22 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1. Initialize Views
         tvNumber = view.findViewById(R.id.tvNumberDisplay)
-        val btnCall = view.findViewById<View>(R.id.btnCall)
         val grid = view.findViewById<GridLayout>(R.id.gridKeypad)
         val btnBackspace = view.findViewById<ImageButton>(R.id.btnBackspace)
         val rvSearch = view.findViewById<RecyclerView>(R.id.rvContactSearch)
+        // Note: btnCall is now an ImageView inside the container
+        val btnCall = view.findViewById<ImageView>(R.id.btnCall)
 
-        // FIX: Use STREAM_MUSIC for louder/reliable tones
+        // 2. Initialize Tone Generator
         try {
             toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
         } catch (e: Exception) {
             e.printStackTrace()
         }
 
-        // Setup Search
+        // 3. Setup RecyclerView
         searchAdapter = ContactSearchAdapter { clickedNumber ->
             tvNumber.text = clickedNumber
             makeCall(clickedNumber)
@@ -52,10 +54,11 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
         rvSearch.layoutManager = LinearLayoutManager(requireContext())
         rvSearch.adapter = searchAdapter
 
-        // Keypad Clicks
+        // 4. Handle Grid Clicks (Supports AppCompatButton)
         for (i in 0 until grid.childCount) {
             val child = grid.getChildAt(i)
-            if (child is Button) {
+            // Check for AppCompatButton (or standard Button)
+            if (child is TextView) { // Both Button and AppCompatButton inherit TextView
                 child.setOnClickListener {
                     val char = child.text.toString()
                     playTone(char[0])
@@ -65,11 +68,11 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
             }
         }
 
-        // Backspace
+        // 5. Backspace Logic
         btnBackspace.setOnClickListener {
             val currentText = tvNumber.text.toString()
             if (currentText.isNotEmpty()) {
-                playTone('1')
+                playTone('1') // Tiny beep
                 tvNumber.text = currentText.substring(0, currentText.length - 1)
                 searchContacts(tvNumber.text.toString())
             }
@@ -81,14 +84,17 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
             true
         }
 
-        // Call Button
+        // 6. Call Button Logic
         btnCall.setOnClickListener {
             val number = tvNumber.text.toString()
             if (number.isNotEmpty()) {
                 makeCall(number)
+            } else {
+                Toast.makeText(requireContext(), "Enter a number", Toast.LENGTH_SHORT).show()
             }
         }
 
+        // 7. Handle Arguments (Deep links)
         val prefilledNumber = arguments?.getString("PREFILLED_NUMBER")
         if (prefilledNumber != null) {
             tvNumber.text = prefilledNumber
@@ -112,7 +118,6 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
             '#' -> ToneGenerator.TONE_DTMF_P
             else -> ToneGenerator.TONE_PROP_BEEP
         }
-        // Play for 150ms
         toneGenerator.startTone(toneType, 150)
     }
 
@@ -121,10 +126,12 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
             searchAdapter.updateData(emptyList())
             return
         }
+
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             return
         }
 
+        // Simple search query logic
         val results = ArrayList<Pair<String, String>>()
         val uri = Uri.withAppendedPath(ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI, Uri.encode(query))
         val projection = arrayOf(
@@ -132,15 +139,20 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
             ContactsContract.CommonDataKinds.Phone.NUMBER
         )
 
-        val cursor = requireContext().contentResolver.query(uri, projection, null, null, null)
-        cursor?.use {
-            val nameIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-            val numIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-            while (it.moveToNext()) {
-                val name = it.getString(nameIdx)
-                val number = it.getString(numIdx)
-                results.add(Pair(name, number))
+        try {
+            val cursor = requireContext().contentResolver.query(uri, projection, null, null, null)
+            cursor?.use {
+                val nameIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val numIdx = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+                while (it.moveToNext()) {
+                    val name = if (nameIdx != -1) it.getString(nameIdx) else "Unknown"
+                    val number = if (numIdx != -1) it.getString(numIdx) else ""
+                    results.add(Pair(name, number))
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         searchAdapter.updateData(results)
     }
@@ -157,7 +169,6 @@ class KeypadFragment : Fragment(R.layout.fragment_keypad) {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Safely release tone generator
         try {
             toneGenerator.release()
         } catch (e: Exception) {
