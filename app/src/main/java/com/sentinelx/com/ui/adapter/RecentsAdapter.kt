@@ -40,6 +40,10 @@ class RecentsAdapter(
         val tvInfo: TextView = view.findViewById(R.id.tvInfo)
         val tvTime: TextView = view.findViewById(R.id.tvTime)
         val ivType: ImageView = view.findViewById(R.id.ivCallType)
+
+        // NEW: Avatar Views
+        val tvInitials: TextView = view.findViewById(R.id.tvInitials)
+        val ivUnknownUser: ImageView = view.findViewById(R.id.ivUnknownUser)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -51,6 +55,7 @@ class RecentsAdapter(
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_recent_header, parent, false)
             HeaderViewHolder(view)
         } else {
+            // Ensure this points to the updated item_recent_call.xml
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_recent_call, parent, false)
             CallViewHolder(view)
         }
@@ -64,28 +69,47 @@ class RecentsAdapter(
         } else if (holder is CallViewHolder && item is RecentsItem.Log) {
             val call = item.data
 
-            holder.tvName.text = if (call.name.isNotEmpty()) call.name else call.number
+            // --- AVATAR LOGIC ---
+            if (call.name.isNotEmpty()) {
+                // CASE 1: SAVED CONTACT -> Show Initials
+                holder.tvName.text = call.name
+
+                // Get first letter, convert to string, make uppercase
+                val initial = call.name.first().toString().uppercase()
+                holder.tvInitials.text = initial
+
+                holder.tvInitials.visibility = View.VISIBLE
+                holder.ivUnknownUser.visibility = View.GONE
+            } else {
+                // CASE 2: UNKNOWN NUMBER -> Show Icon
+                holder.tvName.text = call.number
+
+                holder.tvInitials.visibility = View.GONE
+                holder.ivUnknownUser.visibility = View.VISIBLE
+            }
+
+            // --- Rest of your existing logic ---
             holder.tvTime.text = timeFormat.format(Date(call.date))
 
             when (call.type) {
                 CallLog.Calls.INCOMING_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
+                    holder.ivType.setImageResource(R.drawable.ic_incomming)
                     holder.ivType.setColorFilter(Color.parseColor("#4CAF50"))
                     holder.tvInfo.text = "Incoming"
                 }
                 CallLog.Calls.OUTGOING_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_outgoing)
+                    holder.ivType.setImageResource(R.drawable.ic_outgoing)
                     holder.ivType.setColorFilter(Color.parseColor("#2196F3"))
                     holder.tvInfo.text = "Outgoing"
                 }
                 CallLog.Calls.MISSED_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_missed)
+                    holder.ivType.setImageResource(R.drawable.ic_missed)
                     holder.ivType.setColorFilter(Color.parseColor("#F44336"))
                     holder.tvInfo.text = "Missed"
                     holder.tvName.setTextColor(Color.parseColor("#F44336"))
                 }
                 else -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
+                    holder.ivType.setImageResource(R.drawable.ic_incomming)
                     holder.tvInfo.text = "Unknown"
                 }
             }
@@ -93,6 +117,7 @@ class RecentsAdapter(
         }
     }
 
+    // ... (rest of the file: getItemCount, filter, updateData, groupData) ...
     override fun getItemCount() = displayList.size
 
     fun filter(query: String) {

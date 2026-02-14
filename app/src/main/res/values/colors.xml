@@ -9,4 +9,6 @@
     <color name="retro_bg">#FDFDF5</color>
     <color name="retro_black">#080808</color>
     <color name="retro_white">#FFFFFF</color>
+
+    <color name="bg">#FFFFEB</color>
 </resources>

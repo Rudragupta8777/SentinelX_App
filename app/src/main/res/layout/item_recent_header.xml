@@ -5,11 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="16dp"
-    android:paddingTop="16dp"
+    android:paddingTop="6dp"
     android:paddingBottom="8dp"
     android:text="Today"
-    android:textColor="#4CAF50"
+    android:textColor="#000000"
+    android:fontFamily="sans-serif-black"
     android:textSize="14sp"
     android:textStyle="bold"
     android:textAllCaps="true"
-    android:background="#121212"/>
+    android:background="@color/bg"/>
