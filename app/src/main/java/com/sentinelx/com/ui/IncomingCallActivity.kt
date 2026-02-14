@@ -2,6 +2,7 @@ package com.sentinelx.com.ui
 
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.Ringtone
@@ -26,6 +27,7 @@ class IncomingCallActivity : AppCompatActivity() {
 
     private lateinit var rootLayout: LinearLayout
     private lateinit var tvStatus: TextView
+    private lateinit var tvNumber: TextView
     private var ringtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +37,7 @@ class IncomingCallActivity : AppCompatActivity() {
 
         // Init Views
         rootLayout = findViewById(R.id.rootLayout)
-        val tvNumber = findViewById<TextView>(R.id.tvNumber)
+        tvNumber = findViewById(R.id.tvNumber) // Made class property to access inside listener
         tvStatus = findViewById(R.id.tvStatus)
         val ivIcon = findViewById<ImageView>(R.id.ivIcon)
 
@@ -55,26 +57,34 @@ class IncomingCallActivity : AppCompatActivity() {
         // 2. SET UI COLOR
         when (action.uppercase()) {
             "BLOCK" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#B71C1C")) // RED
+                rootLayout.setBackgroundColor(Color.parseColor("#B71C1C"))
                 ivIcon.setImageResource(android.R.drawable.ic_dialog_alert)
                 btnTrap.visibility = View.VISIBLE
             }
             "ALLOW" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#2E7D32")) // GREEN
+                rootLayout.setBackgroundColor(Color.parseColor("#2E7D32"))
                 ivIcon.setImageResource(android.R.drawable.sym_action_call)
                 btnTrap.visibility = View.GONE
             }
             else -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#FBC02D")) // YELLOW
+                rootLayout.setBackgroundColor(Color.parseColor("#FBC02D"))
                 ivIcon.setImageResource(android.R.drawable.stat_sys_warning)
                 btnTrap.visibility = View.VISIBLE
             }
         }
 
         // 3. LISTENERS
+
+        // --- [FIX] ANSWER BUTTON: Launch CallActivity ---
         btnAnswer.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.answer(0)
+
+            // Launch the Active Call Screen
+            val intent = Intent(this, CallActivity::class.java)
+            intent.putExtra("PHONE_NUMBER", number)
+            startActivity(intent)
+
             finish()
         }
 
@@ -94,10 +104,10 @@ class IncomingCallActivity : AppCompatActivity() {
             if (service != null && currentCall != null) {
                 Toast.makeText(this, "🛡️ Activating AI Shield...", Toast.LENGTH_SHORT).show()
 
-                // 1. Answer Scammer & Dial Bot
                 service.activateTrapAndBridge(currentCall, BOT_NUMBER)
 
-                // 2. Close UI (Service handles the rest)
+                // Note: We do NOT launch CallActivity here immediately.
+                // The Service will launch it when the call state becomes ACTIVE.
                 finishAndRemoveTask()
             } else {
                 Toast.makeText(this, "Error: Call not active", Toast.LENGTH_SHORT).show()
@@ -105,7 +115,6 @@ class IncomingCallActivity : AppCompatActivity() {
             }
         }
 
-        // 4. START RINGING (NOW)
         startRinging()
     }
 

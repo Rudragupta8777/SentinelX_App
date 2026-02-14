@@ -6,8 +6,6 @@ import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-
-
 interface SentinelApiService {
     @POST("call/check")
     suspend fun checkCall(

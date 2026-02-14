@@ -1,14 +1,9 @@
 package com.sentinelx.com.network
 
-import com.sentinelx.com.data.CheckCallRequest
-import com.sentinelx.com.data.CheckCallResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.Header
-import retrofit2.http.POST
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 

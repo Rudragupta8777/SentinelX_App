@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.sentinelx.com.data.CheckCallRequest
 import com.sentinelx.com.network.SentinelNetwork
+import com.sentinelx.com.ui.CallActivity
 import com.sentinelx.com.ui.IncomingCallActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,16 @@ class SentinelCallService : InCallService() {
                 if (state == Call.STATE_DISCONNECTED) {
                     currentCall = null
                 }
+
+                // --- [FIX] LAUNCH CALL SCREEN AUTOMATICALLY ---
+                // This handles AI Trap answer and external answers (headsets)
+                if (state == Call.STATE_ACTIVE) {
+                    val intent = Intent(this@SentinelCallService, CallActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    intent.putExtra("PHONE_NUMBER", getNumber(call))
+                    startActivity(intent)
+                }
+
                 callStatusCallback?.invoke(state)
             }
         })
@@ -59,18 +70,17 @@ class SentinelCallService : InCallService() {
     }
 
     private fun handleIncomingCall(call: Call) {
-        setMuted(true) // Silence ringtone initially
+        setMuted(true)
         val number = getNumber(call)
 
         // [Fast Pass Check - Uncomment when ready]
-        /*
         if (isContactSaved(this, number)) {
             launchIncomingUI(number, "ALLOW", "Saved Contact")
             return
         }
-        */
 
-        Log.d(TAG, "Starting Background Scan...")
+
+        Log.d(TAG, "Unknown Number - Starting Background Scan...")
 
         CoroutineScope(Dispatchers.IO).launch {
             var action = "WARN"
@@ -127,18 +137,15 @@ class SentinelCallService : InCallService() {
         Handler(Looper.getMainLooper()).postDelayed({ currentCall?.stopDtmfTone() }, 200)
     }
 
-    // ═══════════════════════════════════════
-    //  AI TRAP LOGIC (Answer -> Dial -> Merge -> Mute)
-    // ═══════════════════════════════════════
-
     fun activateTrapAndBridge(scammerCall: Call, botNumber: String) {
         Log.d(TAG, "Step 1: Answering Scammer Call")
 
         if (scammerCall.state == Call.STATE_RINGING) {
+            // This answer() will trigger onStateChanged -> STATE_ACTIVE
+            // which will launch CallActivity via the code added above.
             scammerCall.answer(VideoProfile.STATE_AUDIO_ONLY)
         }
 
-        // Wait 1.5s then Dial Bot
         Handler(Looper.getMainLooper()).postDelayed({
             dialBot(scammerCall, botNumber)
         }, 1500)
@@ -167,32 +174,24 @@ class SentinelCallService : InCallService() {
 
         val checkRunnable = object : Runnable {
             var attempts = 0
-
             override fun run() {
                 attempts++
-                val calls = calls // Get active calls list
-
+                val calls = calls
                 if (calls.size >= 2) {
                     val call1 = calls[0]
                     val call2 = calls[1]
 
-                    // Wait for Bot (Call 2) to answer (STATE_ACTIVE)
                     if (call2.state == Call.STATE_ACTIVE) {
                         Log.d(TAG, "Step 3: Bot Answered! MERGING...")
-
-                        // 1. Merge the calls
                         call1.conference(call2)
                         call2.conference(call1)
 
-                        // 2. [NEW] MUTE USER IMMEDIATELY
                         Log.d(TAG, "Step 4: Muting User Microphone")
                         setMuted(true)
-
                         Toast.makeText(applicationContext, "🔴 Trap Active: Mic Muted", Toast.LENGTH_LONG).show()
                         return
                     }
                 }
-
                 if (attempts < 15) {
                     handler.postDelayed(this, 1000)
                 } else {

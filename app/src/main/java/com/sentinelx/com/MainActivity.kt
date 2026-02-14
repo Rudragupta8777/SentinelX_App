@@ -72,7 +72,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- LOGIC TO SWITCH UI ---
 
     private fun showMainUI() {
         setupLayout.visibility = View.GONE
@@ -89,7 +88,6 @@ class MainActivity : AppCompatActivity() {
         mainContentGroup.visibility = View.GONE
     }
 
-    // --- PERMISSION & ROLE LOGIC ---
 
     private fun isSetupComplete(): Boolean {
         // 1. Check Permissions
