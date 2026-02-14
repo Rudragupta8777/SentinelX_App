@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item
         android:id="@+id/nav_recents"
-        android:icon="@android:drawable/ic_menu_recent_history"
+        android:icon="@drawable/ic_recents"
         android:title="Recents" />
 
     <item
@@ -14,4 +15,5 @@
         android:id="@+id/nav_contacts"
         android:icon="@drawable/ic_contacts"
         android:title="Contacts" />
+
 </menu>

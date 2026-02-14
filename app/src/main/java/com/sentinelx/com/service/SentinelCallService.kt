@@ -43,7 +43,7 @@ class SentinelCallService : InCallService() {
         instance = this
         currentCall = call
 
-        Log.d(TAG, "onCallAdded() - Call Detected")
+        Log.d(TAG, "onCallAdded() - State: ${call.state}")
 
         call.registerCallback(object : Call.Callback() {
             override fun onStateChanged(call: Call, state: Int) {
@@ -51,8 +51,7 @@ class SentinelCallService : InCallService() {
                     currentCall = null
                 }
 
-                // --- [FIX] LAUNCH CALL SCREEN AUTOMATICALLY ---
-                // This handles AI Trap answer and external answers (headsets)
+                // Keep the ACTIVE check for when incoming calls are answered
                 if (state == Call.STATE_ACTIVE) {
                     val intent = Intent(this@SentinelCallService, CallActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -65,27 +64,30 @@ class SentinelCallService : InCallService() {
         })
 
         if (call.state == Call.STATE_RINGING) {
+            // Incoming Call Logic
             handleIncomingCall(call)
+        } else {
+            // [FIX 2] Outgoing Call Logic (DIALING or CONNECTING)
+            // Launch Call Screen IMMEDIATELY
+            val intent = Intent(this, CallActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            intent.putExtra("PHONE_NUMBER", getNumber(call))
+            startActivity(intent)
         }
     }
 
+    // ... (Keep handleIncomingCall, launchIncomingUI, onCallRemoved, and Helpers EXACTLY as they were) ...
+    // ... (Keep activateTrapAndBridge, dialBot, monitorCallsForMerge EXACTLY as they were) ...
+
+    // START COPYING HELPERS TO ENSURE FULL FILE IS CORRECT
     private fun handleIncomingCall(call: Call) {
         setMuted(true)
         val number = getNumber(call)
-
-        // [Fast Pass Check - Uncomment when ready]
-        if (isContactSaved(this, number)) {
-            launchIncomingUI(number, "ALLOW", "Saved Contact")
-            return
-        }
-
-
-        Log.d(TAG, "Unknown Number - Starting Background Scan...")
+        Log.d(TAG, "Starting Background Scan...")
 
         CoroutineScope(Dispatchers.IO).launch {
             var action = "WARN"
             var message = "Scanning..."
-
             try {
                 withTimeout(BACKEND_TIMEOUT_MS) {
                     val correlationId = SentinelNetwork.generateCorrelationId()
@@ -97,7 +99,6 @@ class SentinelCallService : InCallService() {
             } catch (e: Exception) {
                 message = "Offline / Timeout"
             }
-
             withContext(Dispatchers.Main) {
                 launchIncomingUI(number, action, message)
             }
@@ -117,9 +118,9 @@ class SentinelCallService : InCallService() {
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
         currentCall = null
+        callStatusCallback?.invoke(Call.STATE_DISCONNECTED)
     }
 
-    // --- Helpers ---
     private fun getNumber(call: Call): String = call.details.handle?.schemeSpecificPart ?: "Unknown"
 
     private fun isContactSaved(context: Context, number: String): Boolean {
@@ -138,14 +139,9 @@ class SentinelCallService : InCallService() {
     }
 
     fun activateTrapAndBridge(scammerCall: Call, botNumber: String) {
-        Log.d(TAG, "Step 1: Answering Scammer Call")
-
         if (scammerCall.state == Call.STATE_RINGING) {
-            // This answer() will trigger onStateChanged -> STATE_ACTIVE
-            // which will launch CallActivity via the code added above.
             scammerCall.answer(VideoProfile.STATE_AUDIO_ONLY)
         }
-
         Handler(Looper.getMainLooper()).postDelayed({
             dialBot(scammerCall, botNumber)
         }, 1500)
@@ -157,13 +153,10 @@ class SentinelCallService : InCallService() {
         val uri = Uri.fromParts("tel", cleanNumber, null)
         val extras = Bundle()
         extras.putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, false)
-
         if (scammerCall.details.accountHandle != null) {
             extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, scammerCall.details.accountHandle)
         }
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Step 2: Dialing Bot ($cleanNumber)")
             telecomManager.placeCall(uri, extras)
             monitorCallsForMerge()
         }
@@ -171,7 +164,6 @@ class SentinelCallService : InCallService() {
 
     private fun monitorCallsForMerge() {
         val handler = Handler(Looper.getMainLooper())
-
         val checkRunnable = object : Runnable {
             var attempts = 0
             override fun run() {
@@ -180,23 +172,15 @@ class SentinelCallService : InCallService() {
                 if (calls.size >= 2) {
                     val call1 = calls[0]
                     val call2 = calls[1]
-
                     if (call2.state == Call.STATE_ACTIVE) {
-                        Log.d(TAG, "Step 3: Bot Answered! MERGING...")
                         call1.conference(call2)
                         call2.conference(call1)
-
-                        Log.d(TAG, "Step 4: Muting User Microphone")
                         setMuted(true)
                         Toast.makeText(applicationContext, "🔴 Trap Active: Mic Muted", Toast.LENGTH_LONG).show()
                         return
                     }
                 }
-                if (attempts < 15) {
-                    handler.postDelayed(this, 1000)
-                } else {
-                    Toast.makeText(applicationContext, "Bot didn't answer", Toast.LENGTH_SHORT).show()
-                }
+                if (attempts < 15) handler.postDelayed(this, 1000)
             }
         }
         handler.post(checkRunnable)

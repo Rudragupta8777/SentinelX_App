@@ -9,6 +9,7 @@ import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
+import android.telecom.Call
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -24,7 +25,6 @@ class IncomingCallActivity : AppCompatActivity() {
     companion object {
         private const val BOT_NUMBER = "+911204413375"
     }
-
     private lateinit var rootLayout: LinearLayout
     private lateinit var tvStatus: TextView
     private lateinit var tvNumber: TextView
@@ -37,7 +37,7 @@ class IncomingCallActivity : AppCompatActivity() {
 
         // Init Views
         rootLayout = findViewById(R.id.rootLayout)
-        tvNumber = findViewById(R.id.tvNumber) // Made class property to access inside listener
+        tvNumber = findViewById(R.id.tvNumber)
         tvStatus = findViewById(R.id.tvStatus)
         val ivIcon = findViewById<ImageView>(R.id.ivIcon)
 
@@ -57,30 +57,28 @@ class IncomingCallActivity : AppCompatActivity() {
         // 2. SET UI COLOR
         when (action.uppercase()) {
             "BLOCK" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#B71C1C"))
+                rootLayout.setBackgroundColor(Color.parseColor("#B71C1C")) // RED
                 ivIcon.setImageResource(android.R.drawable.ic_dialog_alert)
                 btnTrap.visibility = View.VISIBLE
             }
             "ALLOW" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#2E7D32"))
+                rootLayout.setBackgroundColor(Color.parseColor("#2E7D32")) // GREEN
                 ivIcon.setImageResource(android.R.drawable.sym_action_call)
                 btnTrap.visibility = View.GONE
             }
             else -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#FBC02D"))
+                rootLayout.setBackgroundColor(Color.parseColor("#FBC02D")) // YELLOW
                 ivIcon.setImageResource(android.R.drawable.stat_sys_warning)
                 btnTrap.visibility = View.VISIBLE
             }
         }
 
         // 3. LISTENERS
-
-        // --- [FIX] ANSWER BUTTON: Launch CallActivity ---
         btnAnswer.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.answer(0)
 
-            // Launch the Active Call Screen
+            // Launch Call Activity explicitly
             val intent = Intent(this, CallActivity::class.java)
             intent.putExtra("PHONE_NUMBER", number)
             startActivity(intent)
@@ -91,23 +89,17 @@ class IncomingCallActivity : AppCompatActivity() {
         btnReject.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.reject(false, null)
-            finish()
+            finishAndRemoveTask()
         }
 
-        // --- AI TRAP LOGIC ---
         btnTrap.setOnClickListener {
             stopRinging()
-
             val service = SentinelCallService.instance
             val currentCall = SentinelCallService.currentCall
 
             if (service != null && currentCall != null) {
                 Toast.makeText(this, "🛡️ Activating AI Shield...", Toast.LENGTH_SHORT).show()
-
                 service.activateTrapAndBridge(currentCall, BOT_NUMBER)
-
-                // Note: We do NOT launch CallActivity here immediately.
-                // The Service will launch it when the call state becomes ACTIVE.
                 finishAndRemoveTask()
             } else {
                 Toast.makeText(this, "Error: Call not active", Toast.LENGTH_SHORT).show()
@@ -115,20 +107,38 @@ class IncomingCallActivity : AppCompatActivity() {
             }
         }
 
+        // 4. [FIX] LISTEN FOR CALL DISCONNECT (Caller cuts the call)
+        SentinelCallService.callStatusCallback = { state ->
+            if (state == Call.STATE_DISCONNECTED) {
+                runOnUiThread {
+                    stopRinging()
+                    Toast.makeText(this, "Call Ended", Toast.LENGTH_SHORT).show()
+                    finishAndRemoveTask()
+                }
+            }
+        }
+
+        // 5. START RINGING (Only start now, after UI is ready)
         startRinging()
     }
 
     private fun startRinging() {
         try {
+            // [FIX] Double Ringtone Check: Ensure we don't play if already playing
+            if (ringtone?.isPlaying == true) return
+
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
             ringtone = RingtoneManager.getRingtone(applicationContext, uri)
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 ringtone?.isLooping = true
             }
+
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
+
             ringtone?.audioAttributes = audioAttributes
             ringtone?.play()
         } catch (e: Exception) {
@@ -138,7 +148,9 @@ class IncomingCallActivity : AppCompatActivity() {
 
     private fun stopRinging() {
         try {
-            ringtone?.stop()
+            if (ringtone != null && ringtone!!.isPlaying) {
+                ringtone?.stop()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -147,6 +159,12 @@ class IncomingCallActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopRinging()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Safety: If app goes background, ensure we don't leave zombie ringtones
+        if (isFinishing) stopRinging()
     }
 
     private fun wakeUpScreen() {

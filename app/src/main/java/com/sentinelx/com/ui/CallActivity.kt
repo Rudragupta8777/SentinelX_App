@@ -141,42 +141,59 @@ class CallActivity : AppCompatActivity() {
         SentinelCallService.callStatusCallback = { state ->
             runOnUiThread { updateStatus(state) }
         }
-        updateStatus(SentinelCallService.currentCall?.state ?: Call.STATE_NEW)
+
+        // Initial Status Check
+        updateStatus(SentinelCallService.currentCall?.state ?: Call.STATE_DIALING)
     }
 
-    // --- LOGIC: SHOW NAME VS NUMBER ---
+    // --- [FIX 3] DISPLAY LOGIC: Calling vs Duration ---
+    private fun updateStatus(state: Int) {
+        when (state) {
+            Call.STATE_NEW, Call.STATE_DIALING, Call.STATE_CONNECTING -> {
+                tvStatus.text = "Calling..."
+                chronometer.visibility = View.GONE
+            }
+            Call.STATE_ACTIVE -> {
+                tvStatus.text = "Active Call"
+                if (chronometer.visibility != View.VISIBLE) {
+                    chronometer.visibility = View.VISIBLE
+                    chronometer.base = SystemClock.elapsedRealtime()
+                    chronometer.start()
+                }
+            }
+            Call.STATE_DISCONNECTED -> {
+                tvStatus.text = "Call Ended"
+                chronometer.stop()
+                stopRecording()
+                finish()
+            }
+            Call.STATE_HOLDING -> tvStatus.text = "On Hold"
+        }
+    }
+
+    // ... (Rest of Activity: setupContactDisplay, getContactName, updateButtonState, startRecording, stopRecording, checkPermissions, showKeypadDialog, wakeUpScreen) ...
+    // These functions remain exactly the same as previous versions
+
     private fun setupContactDisplay(number: String) {
         val name = getContactName(number)
-
         if (name != null) {
-            // CASE 1: SAVED CONTACT
-            tvName.text = name                // Big Name
-            tvPhoneNumber.text = "Mobile $number" // Small Number
+            tvName.text = name
+            tvPhoneNumber.text = "Mobile $number"
             tvPhoneNumber.visibility = View.VISIBLE
         } else {
-            // CASE 2: UNKNOWN NUMBER
-            tvName.text = number              // Big Number
-            tvPhoneNumber.visibility = View.GONE   // Hide small text
+            tvName.text = number
+            tvPhoneNumber.visibility = View.GONE
         }
     }
 
     private fun getContactName(phoneNumber: String): String? {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            return null
-        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) return null
         val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber))
-        val projection = arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME)
-        var name: String? = null
-        val cursor = contentResolver.query(uri, projection, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                name = it.getString(it.getColumnIndexOrThrow(ContactsContract.PhoneLookup.DISPLAY_NAME))
-            }
-        }
-        return name
+        val cursor = contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)
+        cursor?.use { if (it.moveToFirst()) return it.getString(0) }
+        return null
     }
 
-    // --- HELPER: BUTTON STATE ---
     private fun updateButtonState(view: ImageView, isActive: Boolean, activeIconRes: Int, inactiveIconRes: Int) {
         if (isActive) {
             view.background.setTint(Color.WHITE)
@@ -189,13 +206,11 @@ class CallActivity : AppCompatActivity() {
         }
     }
 
-    // --- RECORDING ---
     private fun startRecording() {
         try {
             val fileName = "Call_" + SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) + ".3gp"
             val file = File(getExternalFilesDir(null), fileName)
             recordFile = file.absolutePath
-
             mediaRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
@@ -218,9 +233,7 @@ class CallActivity : AppCompatActivity() {
                 mediaRecorder?.release()
                 mediaRecorder = null
                 isRecording = false
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -228,16 +241,12 @@ class CallActivity : AppCompatActivity() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
     }
 
-    // --- KEYPAD ---
     private fun showKeypadDialog() {
         val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         dialog.setContentView(R.layout.dialog_keypad)
-        dialog.window?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-            ?.setBackgroundResource(android.R.color.transparent)
-
+        dialog.window?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)?.setBackgroundResource(android.R.color.transparent)
         val tvDisplay = dialog.findViewById<TextView>(R.id.tvKeypadInput)
         val grid = dialog.findViewById<GridLayout>(R.id.keypadGrid)
-
         if (grid != null) {
             for (i in 0 until grid.childCount) {
                 val child = grid.getChildAt(i)
@@ -252,28 +261,6 @@ class CallActivity : AppCompatActivity() {
             }
         }
         dialog.show()
-    }
-
-    // --- STATUS UPDATES ---
-    private fun updateStatus(state: Int) {
-        when (state) {
-            Call.STATE_ACTIVE -> {
-                tvStatus.text = "Active Call"
-                if (chronometer.visibility != View.VISIBLE) {
-                    chronometer.visibility = View.VISIBLE
-                    chronometer.base = SystemClock.elapsedRealtime()
-                    chronometer.start()
-                }
-            }
-            Call.STATE_DIALING -> tvStatus.text = "Calling..."
-            Call.STATE_CONNECTING -> tvStatus.text = "Connecting..."
-            Call.STATE_DISCONNECTED -> {
-                tvStatus.text = "Call Ended"
-                stopRecording()
-                finish()
-            }
-            Call.STATE_HOLDING -> tvStatus.text = "On Hold"
-        }
     }
 
     private fun wakeUpScreen() {

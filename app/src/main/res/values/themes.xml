@@ -13,4 +13,9 @@
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
+    <style name="CustomActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">#524CAF50</item>
+
+    </style>
+
 </resources>
