@@ -1,94 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#263238"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="32dp">
-
-    <ImageView
-        android:id="@+id/ivIcon"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:src="@android:drawable/ic_dialog_info"
-        android:tint="#FFFFFF" />
+    android:background="#995EA85E">
 
     <TextView
-        android:id="@+id/tvTitle"
+        android:id="@+id/tvLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="SCANNING..."
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Checking Sentinel Database..."
-        android:textColor="#B0BEC5"
+        android:layout_marginTop="80dp"
+        android:text="mobile"
+        android:textColor="#333333"
         android:textSize="16sp"
-        android:gravity="center"/>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="16dp"
-        android:indeterminate="true"
-        android:indeterminateTint="#FFFFFF"
-        android:visibility="gone"/>
+        android:fontFamily="sans-serif"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvNumber"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="+91 98765 43210"
+        android:textColor="#121212"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLabel" />
+
+    <LinearLayout
+        android:id="@+id/layoutRisk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="+91..."
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold"/>
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <Button
-        android:id="@+id/btnTrap"
-        android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:backgroundTint="#000000"
-        android:text="ANSWER WITH AI TRAP"
-        android:textColor="#4CAF50"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:visibility="gone"
-        android:layout_marginBottom="12dp"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45">
 
-    <Button
-        android:id="@+id/btnAnswer"
-        android:layout_width="match_parent"
-        android:layout_height="65dp"
-        android:backgroundTint="#4CAF50"
-        android:text="ANSWER"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp"/>
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_warning_triangle"
+            app:tint="#333333" />
 
-    <Button
+        <TextView
+            android:id="@+id/tvRiskStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="High Risk"
+            android:textColor="#333333"
+            android:textSize="24sp"
+            android:fontFamily="sans-serif-medium"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutCenterAction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/btnAnswer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/ivCenterAction"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@drawable/ic_ai"/>
+
+        <TextView
+            android:id="@+id/tvCenterAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Answer with AI"
+            android:textColor="#333333"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"/>
+    </LinearLayout>
+
+    <ImageButton
         android:id="@+id/btnReject"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:backgroundTint="#D32F2F"
-        android:text="REJECT"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"/>
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="100dp"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/ripple_reject"
+        android:src="@drawable/ic_call_btn"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</LinearLayout>
+    <ImageButton
+        android:id="@+id/btnAnswer"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="100dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/ripple_answer"
+        android:src="@drawable/ic_accept_btn"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

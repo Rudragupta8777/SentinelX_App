@@ -7,17 +7,19 @@ import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telecom.Call
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.sentinelx.com.R
 import com.sentinelx.com.service.SentinelCallService
 
@@ -25,60 +27,54 @@ class IncomingCallActivity : AppCompatActivity() {
     companion object {
         private const val BOT_NUMBER = "+911204413375"
     }
-    private lateinit var rootLayout: LinearLayout
-    private lateinit var tvStatus: TextView
+
+    private lateinit var rootLayout: ConstraintLayout
     private lateinit var tvNumber: TextView
+    private lateinit var layoutRisk: LinearLayout
+    private lateinit var tvRiskStatus: TextView
+    private lateinit var layoutCenterAction: LinearLayout
+    private lateinit var ivCenterAction: ImageView
+    private lateinit var tvCenterAction: TextView
+
     private var ringtone: Ringtone? = null
+    private var isSafeCall = false // To track if we should Message or Trap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         wakeUpScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_incoming_call)
 
-        // Init Views
+        // 1. Init Views (Matches new XML)
         rootLayout = findViewById(R.id.rootLayout)
         tvNumber = findViewById(R.id.tvNumber)
-        tvStatus = findViewById(R.id.tvStatus)
-        val ivIcon = findViewById<ImageView>(R.id.ivIcon)
+        layoutRisk = findViewById(R.id.layoutRisk)
+        tvRiskStatus = findViewById(R.id.tvRiskStatus)
 
-        // Buttons
-        val btnAnswer = findViewById<Button>(R.id.btnAnswer)
-        val btnReject = findViewById<Button>(R.id.btnReject)
-        val btnTrap = findViewById<Button>(R.id.btnTrap)
+        layoutCenterAction = findViewById(R.id.layoutCenterAction)
+        ivCenterAction = findViewById(R.id.ivCenterAction)
+        tvCenterAction = findViewById(R.id.tvCenterAction)
 
-        // 1. GET DATA
+        // Note: XML uses ImageButtons now
+        val btnAnswer = findViewById<ImageButton>(R.id.btnAnswer)
+        val btnReject = findViewById<ImageButton>(R.id.btnReject)
+
+        // 2. GET DATA
         val number = intent.getStringExtra("PHONE_NUMBER") ?: "Unknown"
         val action = intent.getStringExtra("ACTION") ?: "WARN"
-        val message = intent.getStringExtra("MESSAGE") ?: "Incoming Call"
 
         tvNumber.text = number
-        tvStatus.text = message
 
-        // 2. SET UI COLOR
-        when (action.uppercase()) {
-            "BLOCK" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#B71C1C")) // RED
-                ivIcon.setImageResource(android.R.drawable.ic_dialog_alert)
-                btnTrap.visibility = View.VISIBLE
-            }
-            "ALLOW" -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#2E7D32")) // GREEN
-                ivIcon.setImageResource(android.R.drawable.sym_action_call)
-                btnTrap.visibility = View.GONE
-            }
-            else -> {
-                rootLayout.setBackgroundColor(Color.parseColor("#FBC02D")) // YELLOW
-                ivIcon.setImageResource(android.R.drawable.stat_sys_warning)
-                btnTrap.visibility = View.VISIBLE
-            }
-        }
+        // 3. APPLY UI THEME (Green/Red/Yellow)
+        applyTheme(action)
 
-        // 3. LISTENERS
+        // 4. LISTENERS
+
+        // --- ANSWER (Green Button) ---
         btnAnswer.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.answer(0)
 
-            // Launch Call Activity explicitly
+            // Launch Call Activity explicitly (Your existing logic)
             val intent = Intent(this, CallActivity::class.java)
             intent.putExtra("PHONE_NUMBER", number)
             startActivity(intent)
@@ -86,13 +82,91 @@ class IncomingCallActivity : AppCompatActivity() {
             finish()
         }
 
+        // --- REJECT (Red Button) ---
         btnReject.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.reject(false, null)
             finishAndRemoveTask()
         }
 
-        btnTrap.setOnClickListener {
+        // --- CENTER ACTION (AI Trap OR Message) ---
+        layoutCenterAction.setOnClickListener {
+            handleCenterAction(number)
+        }
+
+        // --- CALL DISCONNECT LISTENER (Your existing logic) ---
+        SentinelCallService.callStatusCallback = { state ->
+            if (state == Call.STATE_DISCONNECTED) {
+                runOnUiThread {
+                    stopRinging()
+                    Toast.makeText(this, "Call Ended", Toast.LENGTH_SHORT).show()
+                    finishAndRemoveTask()
+                }
+            }
+        }
+
+        // 5. START RINGING
+        startRinging()
+    }
+
+    /**
+     * Applies colors and icons based on Risk Level
+     */
+    private fun applyTheme(action: String) {
+        when (action.uppercase()) {
+            "BLOCK" -> {
+                // RED THEME (High Risk)
+                isSafeCall = false
+                rootLayout.setBackgroundColor(Color.parseColor("#B86E64")) // Muted Red
+                layoutRisk.visibility = View.VISIBLE
+                tvRiskStatus.text = "High Risk"
+
+                ivCenterAction.setImageResource(R.drawable.ic_ai)
+                tvCenterAction.text = "Answer with AI"
+            }
+            "ALLOW" -> {
+                // GREEN THEME (Safe)
+                isSafeCall = true
+                rootLayout.setBackgroundColor(Color.parseColor("#74B685")) // Muted Green
+                layoutRisk.visibility = View.GONE
+
+                // Show Message Icon
+                ivCenterAction.setImageResource(R.drawable.ic_message)
+                tvCenterAction.text = "Message"
+            }
+            else -> {
+                // YELLOW THEME (Medium Risk - Default)
+                isSafeCall = false
+                rootLayout.setBackgroundColor(Color.parseColor("#E2D58B")) // Muted Yellow
+                layoutRisk.visibility = View.VISIBLE
+                tvRiskStatus.text = "Medium Risk"
+
+                ivCenterAction.setImageResource(R.drawable.ic_ai)
+                tvCenterAction.text = "Answer with AI"
+            }
+        }
+    }
+
+    private fun handleCenterAction(number: String) {
+        if (isSafeCall) {
+            // --- ACTION: MESSAGE ---
+            stopRinging()
+
+            // Optional: Reject call before opening SMS
+            SentinelCallService.currentCall?.reject(false, "Sent Message")
+
+            try {
+                val smsIntent = Intent(Intent.ACTION_SENDTO)
+                smsIntent.data = Uri.parse("smsto:$number")
+                startActivity(smsIntent)
+                Toast.makeText(this, "Opening Messages...", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Messaging app not found", Toast.LENGTH_SHORT).show()
+            }
+
+            finishAndRemoveTask()
+        } else {
+            // --- ACTION: AI TRAP ---
             stopRinging()
             val service = SentinelCallService.instance
             val currentCall = SentinelCallService.currentCall
@@ -106,25 +180,11 @@ class IncomingCallActivity : AppCompatActivity() {
                 finish()
             }
         }
-
-        // 4. [FIX] LISTEN FOR CALL DISCONNECT (Caller cuts the call)
-        SentinelCallService.callStatusCallback = { state ->
-            if (state == Call.STATE_DISCONNECTED) {
-                runOnUiThread {
-                    stopRinging()
-                    Toast.makeText(this, "Call Ended", Toast.LENGTH_SHORT).show()
-                    finishAndRemoveTask()
-                }
-            }
-        }
-
-        // 5. START RINGING (Only start now, after UI is ready)
-        startRinging()
     }
+
 
     private fun startRinging() {
         try {
-            // [FIX] Double Ringtone Check: Ensure we don't play if already playing
             if (ringtone?.isPlaying == true) return
 
             val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
@@ -163,7 +223,6 @@ class IncomingCallActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Safety: If app goes background, ensure we don't leave zombie ringtones
         if (isFinishing) stopRinging()
     }
 

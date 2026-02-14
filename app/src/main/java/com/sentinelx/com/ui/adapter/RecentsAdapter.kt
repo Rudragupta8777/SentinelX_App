@@ -89,23 +89,23 @@ class RecentsAdapter(
 
             when (call.type) {
                 CallLog.Calls.INCOMING_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
+                    holder.ivType.setImageResource(R.drawable.ic_incomming)
                     holder.ivType.setColorFilter(Color.parseColor("#4CAF50"))
                     holder.tvInfo.text = "Incoming"
                 }
                 CallLog.Calls.OUTGOING_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_outgoing)
+                    holder.ivType.setImageResource(R.drawable.ic_outgoing)
                     holder.ivType.setColorFilter(Color.parseColor("#2196F3"))
                     holder.tvInfo.text = "Outgoing"
                 }
                 CallLog.Calls.MISSED_TYPE -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_missed)
+                    holder.ivType.setImageResource(R.drawable.ic_missed)
                     holder.ivType.setColorFilter(Color.parseColor("#F44336"))
                     holder.tvInfo.text = "Missed"
                     holder.tvName.setTextColor(Color.parseColor("#F44336"))
                 }
                 else -> {
-                    holder.ivType.setImageResource(android.R.drawable.sym_call_incoming)
+                    holder.ivType.setImageResource(R.drawable.ic_incomming)
                     holder.tvInfo.text = "Unknown"
                 }
             }
