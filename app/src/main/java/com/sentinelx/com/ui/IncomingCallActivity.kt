@@ -8,18 +8,21 @@ import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.sentinelx.com.R
 import com.sentinelx.com.service.SentinelCallService
 
 class IncomingCallActivity : AppCompatActivity() {
+    companion object {
+        private const val BOT_NUMBER = "+911204413375"
+    }
 
     private lateinit var rootLayout: LinearLayout
     private lateinit var tvStatus: TextView
@@ -41,7 +44,7 @@ class IncomingCallActivity : AppCompatActivity() {
         val btnReject = findViewById<Button>(R.id.btnReject)
         val btnTrap = findViewById<Button>(R.id.btnTrap)
 
-        // 1. GET DATA (Already Processed by Backend)
+        // 1. GET DATA
         val number = intent.getStringExtra("PHONE_NUMBER") ?: "Unknown"
         val action = intent.getStringExtra("ACTION") ?: "WARN"
         val message = intent.getStringExtra("MESSAGE") ?: "Incoming Call"
@@ -74,16 +77,32 @@ class IncomingCallActivity : AppCompatActivity() {
             SentinelCallService.currentCall?.answer(0)
             finish()
         }
+
         btnReject.setOnClickListener {
             stopRinging()
             SentinelCallService.currentCall?.reject(false, null)
             finish()
         }
+
+        // --- AI TRAP LOGIC ---
         btnTrap.setOnClickListener {
             stopRinging()
-            // Call your Trap Function here
-            // SentinelCallService.instance?.activateTrapAndBridge(...)
-            finish()
+
+            val service = SentinelCallService.instance
+            val currentCall = SentinelCallService.currentCall
+
+            if (service != null && currentCall != null) {
+                Toast.makeText(this, "🛡️ Activating AI Shield...", Toast.LENGTH_SHORT).show()
+
+                // 1. Answer Scammer & Dial Bot
+                service.activateTrapAndBridge(currentCall, BOT_NUMBER)
+
+                // 2. Close UI (Service handles the rest)
+                finishAndRemoveTask()
+            } else {
+                Toast.makeText(this, "Error: Call not active", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
 
         // 4. START RINGING (NOW)
