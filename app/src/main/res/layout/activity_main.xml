@@ -38,7 +38,7 @@
         android:id="@+id/layout_setup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#121212"
+        android:background="@color/bg"
         android:gravity="center"
         android:orientation="vertical"
         android:padding="32dp"
@@ -49,8 +49,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="SENTINEL-X"
-            android:textColor="#4CAF50"
-            android:textSize="32sp"
+            android:textColor="@color/black"
+            android:fontFamily="sans-serif-black"
+            android:textSize="38sp"
             android:textStyle="bold" />
 
         <TextView
@@ -58,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="To activate the AI Shield, we need to be your default phone app."
-            android:textColor="#B0BEC5"
+            android:textColor="#817E7E"
             android:textSize="16sp"
             android:gravity="center" />
 
@@ -67,7 +68,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="40dp"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="#97F09A"
             android:text="ACTIVATE SHIELD"
             android:textColor="#000000"
             android:textStyle="bold" />

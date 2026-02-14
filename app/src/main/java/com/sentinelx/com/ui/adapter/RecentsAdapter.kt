@@ -162,4 +162,14 @@ class RecentsAdapter(
             older.forEach { displayList.add(RecentsItem.Log(it)) }
         }
     }
+
+    fun getItemAt(position: Int): CallLogItem? {
+        if (position >= 0 && position < displayList.size) {
+            val item = displayList[position]
+            if (item is RecentsItem.Log) {
+                return item.data
+            }
+        }
+        return null
+    }
 }

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="24dp"
+    app:cardBackgroundColor="#FFFFEB"
+    app:cardElevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Report Spam"
+            android:textColor="#333333"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"/>
+
+        <TextView
+            android:id="@+id/tvReportNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+91 XXXXX XXXXX"
+            android:textColor="#666666"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_horizontal"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reason for report"
+            android:textColor="#333333"
+            android:textSize="14sp"
+            android:layout_marginTop="24dp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/etReason"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_edit_text_area"
+            android:gravity="top|start"
+            android:hint="e.g., They were asking for my credit card details..."
+            android:textColorHint="#999999"
+            android:textColor="#333333"
+            android:padding="16dp"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btnSubmitReport"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#7CB385"
+            android:text="CONFIRM REPORT"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
