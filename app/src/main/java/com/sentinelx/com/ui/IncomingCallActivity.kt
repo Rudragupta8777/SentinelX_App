@@ -74,9 +74,13 @@ class IncomingCallActivity : AppCompatActivity() {
             stopRinging()
             SentinelCallService.currentCall?.answer(0)
 
-            // Launch Call Activity explicitly (Your existing logic)
+            // Launch Call Activity explicitly
             val intent = Intent(this, CallActivity::class.java)
             intent.putExtra("PHONE_NUMBER", number)
+
+            // [FIX] PASS THE ACTION SO CALL SCREEN KNOWS THE COLOR
+            intent.putExtra("ACTION", action)
+
             startActivity(intent)
 
             finish()
