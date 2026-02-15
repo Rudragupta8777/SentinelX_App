@@ -47,13 +47,17 @@ class MainActivity : AppCompatActivity() {
 
         // 2. Setup Navigation Logic
         bottomNav.setOnItemSelectedListener { item ->
-            var selectedFragment: Fragment? = null
-            when (item.itemId) {
-                R.id.nav_recents -> selectedFragment = RecentsFragment()
-                R.id.nav_keypad -> selectedFragment = KeypadFragment()
-                R.id.nav_contacts -> selectedFragment = ContactsFragment()
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+
+            val selectedFragment: Fragment = when (item.itemId) {
+                R.id.nav_recents -> RecentsFragment()
+                R.id.nav_keypad -> KeypadFragment()
+                R.id.nav_contacts -> ContactsFragment()
+                else -> return@setOnItemSelectedListener false
             }
-            if (selectedFragment != null) {
+
+            // Only load if the new fragment is different from the current one
+            if (currentFragment == null || currentFragment::class != selectedFragment::class) {
                 loadFragment(selectedFragment)
             }
             true
@@ -190,6 +194,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
+            // [NEW] Add smooth fade animations
+            .setCustomAnimations(
+                R.anim.fade_in,  // enter
+                R.anim.fade_out, // exit
+                R.anim.fade_in,  // popEnter
+                R.anim.fade_out  // popExit
+            )
             .replace(R.id.fragment_container, fragment)
             .commit()
     }
