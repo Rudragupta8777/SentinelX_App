@@ -33,13 +33,10 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 class ContactsFragment : Fragment(R.layout.fragment_contacts) {
-
     private lateinit var adapter: ContactsAdapter
     private lateinit var rvContacts: RecyclerView
     private lateinit var sideBar: LinearLayout
     private lateinit var tvOverlay: TextView
-
-    // Animation Job
     private var animationJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,15 +58,11 @@ class ContactsFragment : Fragment(R.layout.fragment_contacts) {
             loadContacts()
         }
 
-        // --- ANIMATION LOGIC START ---
-
-        // 1. Start animation initially
         startLogoAnimation(logoContainer)
 
         // 2. Focus Listener: Hide logo when user clicks to type
         etSearch.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                // User clicked search: Stop anim, Hide logo, Show keyboard
                 stopLogoAnimation()
                 logoContainer.visibility = View.GONE
                 showKeyboard(etSearch)
@@ -82,7 +75,6 @@ class ContactsFragment : Fragment(R.layout.fragment_contacts) {
             }
         }
 
-        // --- ANIMATION LOGIC END ---
 
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -95,7 +87,6 @@ class ContactsFragment : Fragment(R.layout.fragment_contacts) {
         setupSideBar()
     }
 
-    // --- NEW ANIMATION FUNCTIONS ---
 
     private fun startLogoAnimation(container: LinearLayout) {
         animationJob?.cancel()
@@ -125,8 +116,6 @@ class ContactsFragment : Fragment(R.layout.fragment_contacts) {
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
-
-    // --- EXISTING LOGIC ---
 
     private fun loadContacts() {
         val contactList = ArrayList<Pair<String, String>>()
@@ -159,8 +148,6 @@ class ContactsFragment : Fragment(R.layout.fragment_contacts) {
         for (char in alphabet) {
             val tv = TextView(context)
             tv.text = char.toString()
-            // Updated color to match light background theme if needed,
-            // but keeping gray for now to be safe with white/off-white backgrounds
             tv.setTextColor(Color.parseColor("#888888"))
             tv.textSize = 12f
             tv.gravity = Gravity.CENTER
